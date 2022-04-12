@@ -1786,122 +1786,13 @@ lemma if_wb_n_then_wb_ins_n_val
     exact h_1,
   end
 
-lemma if_well_balanced_n_then_well_balanced_del_n_val
-  : ∀ (n : avlnode α) (val : α), well_balanced n → well_balanced (del n val)
-| nil del_val :=
-  begin
-    intro h,
-    rw [del, well_balanced],
-    trivial,
-  end
-| (node l v r) del_val :=
-  begin
-    sorry,
-  end
-
 end avlnode
 
 namespace avltree 
 
 variables {α : Type u} [linear_order α]
 
-/- structurally identical trees are identical -/
-axiom l_val_r_eq_iff_t_eq (l1 : avlnode α) (val1 : α) (r1 : avlnode α) (l2 : avlnode α) (val2 : α) (r2 : avlnode α) 
-  : (node l1 val1 r1) = (node l2 val2 r2) ↔ (l1 = l2) ∧ (val1 = val2) ∧ (r1 = r2)
-
-/- subtrees of trees well formed iff trees well formed -/
-axiom subtrees_wf_iff_t_wf (l : avlnode α) (val : α) (r : avlnode α)
-  : well_formed l ∧ well_formed r ↔ well_formed (node l val r)
-
-/- avl insert increases the depth of a tree by at most 1 - must do a lot of case analysis -/
-lemma depth_ins_t_val_le_depth_t_plus_one (t : avltree α) (ins_val : α)
-  : (ins t ins_val).depth ≤ t.depth + 1 :=
-begin
-  cases t with n wf,
-  rw ins,
-  repeat {rw depth},
-  induction n with l val r,
-
-  rw avlnode.ins,
-  repeat {rw avlnode.depth},
-  trivial,
-
-  have h2 := subtrees_wf_iff_t_wf l val r,
-  rw ← h2 at wf,
-  rw avlnode.ins,
-  cases em (ins_val ≤ val),
-  rw if_pos,
-  have ha := avlnode.depth_balance_t_leq_depth_t (node (l.ins ins_val) val r),
-  rw avlnode.depth at ha,
-  have hb := n_ih_left wf.left,
-  cases em (l.depth ≤ r.depth),
-  rw if_pos,
-  cases em ((l.ins ins_val).depth ≤ r.depth),
-  rw if_pos at ha,
-  have hc := int.add_le_add ha (int.coe_zero_le 1),
-  rw int.add_zero (((l.ins ins_val).node val r).balance.depth) at hc,
-  exact hc,
-  exact h_2,
-  rw if_neg at ha,
-  have hc := int.add_le_add_right hb 1,
-  have hd := le_trans ha hc,
-  have he := int.add_le_add_right (int.add_le_add_right h_1 1) 1,
-  exact (le_trans hd he),
-  exact h_2,
-  exact h_1,
-  rw if_neg,
-  cases em ((l.ins ins_val).depth ≤ r.depth),
-  rw if_pos at ha,
-  have hc := int.add_le_add_right (int.add_le_add (le_of_not_le h_1) (int.coe_zero_le 1)) 1,
-  rw int.add_zero r.depth at hc,
-  have hd := le_trans ha hc,
-  exact hd,
-  exact h_2,
-  rw if_neg at ha,
-  have hc := int.add_le_add_right hb 1,
-  have hd := le_trans ha hc,
-  exact hd,
-  exact h_2,
-  exact h_1,
-  exact h,
-
-  rw if_neg,
-  have ha := avlnode.depth_balance_t_leq_depth_t (node l val (r.ins ins_val)),
-  rw avlnode.depth at ha,
-  have hb := n_ih_right wf.right,
-  cases em (l.depth ≤ r.depth),
-  rw if_pos,
-  cases em (l.depth ≤ (r.ins ins_val).depth),
-  rw if_pos at ha,
-  have hc := int.add_le_add_right hb 1,
-  have hd := le_trans ha hc,
-  exact hd,
-  exact h_2,
-  rw if_neg at ha,
-  have hc := int.add_le_add_right h_1 1,
-  have hd := le_trans ha hc,
-  have he := int.add_le_add hd (int.coe_zero_le 1),
-  rw (int.add_zero (l.node val (r.ins ins_val)).balance.depth) at he,
-  exact he,
-  exact h_2,
-  exact h_1,
-  rw if_neg,
-  cases em (l.depth ≤ (r.ins ins_val).depth),
-  rw if_pos at ha,
-  have hc := int.add_le_add_right (le_of_not_le h_1) 1,
-  have hd := int.add_le_add_right (le_trans hb hc) 1,
-  have he := le_trans ha hd,
-  exact he,
-  exact h_2,
-  rw if_neg at ha,
-  have hc := int.add_le_add ha (int.coe_zero_le 1),
-  rw (int.add_zero (l.node val (r.ins ins_val)).balance.depth) at hc,
-  exact hc,
-  exact h_2,
-  exact h_1,
-  exact h,
-end
-
+/- allows you to obtain a proof of properties of avltree for any well formed tree -/
 theorem wf_t_well_balanced : ∀ (t : avltree α), well_balanced t :=
 begin
   intro t,
@@ -1916,11 +1807,6 @@ begin
   rw well_balanced at h3,
   rw [well_balanced, h2],
   exact avlnode.if_wb_n_then_wb_ins_n_val n1 val h3,
-  
-  /- delete case -/
-  rw well_balanced at h3,
-  rw [well_balanced, h2],
-  exact avlnode.if_well_balanced_n_then_well_balanced_del_n_val n1 val h3,
 end
 
 end avltree

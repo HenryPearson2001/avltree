@@ -76,38 +76,6 @@ def ins : avlnode α → α → avlnode α
   | (node l val r) ins_val := if ins_val ≤ val then balance (node (ins l ins_val) val r)
                               else balance (node l val (ins r ins_val))
 
-def leftmost : avlnode α → avlnode α
-  | nil              := nil
-  | (node nil val r) := node nil val r
-  | (node l val r)   := leftmost l
-
-/- returns nil if empty tree input or there is no successor -/
-def successor : avlnode α → avlnode α 
-  | nil            := nil
-  | (node l val r) := leftmost r
-
-/- function needed for node deletion -/
-private def replace_leftmost  : avlnode α → avlnode α → avlnode α 
-  | nil n := n
-  | (node nil val r) n := n
-  | (node l val r) n := node (replace_leftmost l n) val r
-
-/- returns original tree if value not in the tree, otherwise returns new tree -/
-def del : avlnode α → α → avlnode α 
-  | nil del_val := nil
-  | (node l val r) del_val := if del_val < val then balance (node (del l del_val) val r)
-                              else if val < del_val then balance (node l val (del r del_val))
-                              else match l, r with
-                                | nil, nil               := nil 
-                                | nil, r2                := r2
-                                | l2, nil                := l2
-                                | l2, (node nil val3 r3) := node l val3 r3
-                                | l2, (node l3 val3 r3)  := match successor (node l val r) with
-                                                              | nil               := nil
-                                                              | (node l4 val4 r4) := balance (node l val4 (replace_leftmost r r4))
-                                                            end  
-                              end
-
 /- returns a prop as to whether an element is in the tree -/
 def mem : avlnode α → α → Prop 
   | nil mem_val := false
@@ -148,14 +116,12 @@ def well_balanced : avlnode α → Prop
 instance avlnode_has_repr [has_repr α] : has_repr (avlnode α) := ⟨λ t, repr (pre_order t)⟩
 
 /- datatype that constructs a proof that an avl tree is well formed -/
-/- here define well formed to be created from a series of defined insert and delete operations -/
+/- here define well formed to be created from a series of defined insert -/
 /- thus every empty tree is well formed (so proof given), 
 and given a proof n1 is well formed, and that n2 is n1 after either insert or delete performed with val, provide proof n2 is well formed-/
 inductive well_formed : avlnode α → Prop
 | wf_nil                                             : well_formed nil
 | wf_ins {n1 : avlnode α} {n2 : avlnode α} {val : α} : well_formed n1 → n2 = ins n1 val → well_formed n2
-| wf_del {n1 : avlnode α} {n2 : avlnode α} {val : α} : well_formed n1 → n2 = del n1 val → well_formed n2
-
 
 end avlnode
 
@@ -189,9 +155,6 @@ def foldl (f : α → β → β) : avltree α → β → β
 def ins : avltree α → α → avltree α
   | ⟨n, p⟩ val := ⟨n.ins val, well_formed.wf_ins p rfl⟩
 
-def del : avltree α → α → avltree α
-  | ⟨n, p⟩ val := ⟨n.del val, well_formed.wf_del p rfl⟩
-
 def mem : avltree α → α → Prop
   | ⟨n, _⟩ val := n.mem val 
 
@@ -223,38 +186,3 @@ def well_balanced : avltree α → Prop
   | ⟨n, _⟩ := n.well_balanced
   
 end avltree
-
-
-
-
-
-
-
-
-
-#print option
-
-open avlnode
-
-def myTree : avlnode nat := node (node nil 1 (node nil 2 nil)) 3 (node (node nil 4 nil) 5 (node nil 6 (node nil 7 nil)))
-
-def myNewTree : avlnode nat := node (node (node nil 1 nil) 2 (node nil 3 nil)) 4 (node (node nil 5 (node nil 6 nil)) 7 (node nil 8 nil))
-
-def badlyFormedTree : avlnode nat := node (node (node nil 1 nil) 2 nil) 3 nil
-
-
-#eval del myNewTree 4
-
-def myFunc : nat → nat → nat 
-  | x y := x + 2 * y
-
-#eval foldl myFunc myTree 0
-#eval rotate_right myTree
-#eval del myTree 5
-#eval balance_factor badlyFormedTree
-#eval depth badlyFormedTree
-#reduce well_formed badlyFormedTree 
-
-#eval post_order myTree
-
-#eval myTree
