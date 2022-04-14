@@ -1,10 +1,5 @@
 import avlnode.init
 import tactic.linarith
-import analysis.asymptotics.asymptotics
-import order.filter.basic
-import data.real.basic
-import analysis.special_functions.log
-import data.nat.log
 
 open classical
 open avlnode
