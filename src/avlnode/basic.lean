@@ -1,5 +1,54 @@
+/-
+Copyright (c) 2022 Henry Pearson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Author: Henry Pearson.
+-/
+
 import avlnode.init
 import tactic.linarith
+
+/-!
+# AVL node basic theorems
+
+This file follows from `avlnode.init.lean` and specifies a series of lemmas which form the basis 
+of a proof that the set of AVL trees (defined by the `well_balanced`) is closed under the `ins` 
+operation defined in the init file. In this file if a node n is referred to it is referencing an 
+object with type avlnode α.
+
+## Main definitions
+
+* `avlnode.neg_1_le_dep_n` is a proof that the minimum depth of an avlnode is -1 (in the case it is the 
+empty tree).
+
+* `avlnode.dep_l_v_nil_eq_dep_l_add_1` is a proof that the the depth of a tree with just one left subtree
+is the depth of that subtree add 1.
+
+* `avlnode.dep_nil_v_r_eq_dep_r_add_1` is a proof that the the depth of a tree with just one right subtree
+is the depth of that subtree add 1.
+
+* `avlnode.dep_l_le_dep_r_then_dep_l_v_r_eq_dep_r_add_1` is a proof that given a node n, if the depth of 
+the left subtree is less than or equal to the depth of the right subtree, then the depth of n is 
+equal to the depth of the right subtree add 1.
+
+* `avlnode.dep_r_le_dep_l_then_dep_l_v_r_eq_dep_l_add_1` is a proof that given a node n, if the depth of 
+the right subtree is less than or equal to the depth of the left subtree, then the depth of n is 
+equal to the depth of the left subtree add 1.
+
+* `avlnode.dep_l_add_1_le_dep_l_v_r` is a proof that given a node n, the depth of the left subtree add 1 
+is less than the depth of n.
+
+* `avlnode.dep_r_add_1_le_dep_l_v_r` is a proof that given a node n, the depth of the right subtree add 1 
+is less than the depth of n.
+
+* `avlnode.dep_bal_n_le_dep_n` is a proof that the balance operation does not increase the depth of a node
+n.
+
+* `avlnode.wb_n_then_wb_ins_n_val` is a proof that the well balanced property is closed under the defined
+`ins` operation.
+
+* `avlnode.wb_nil` is a proof that the empty tree is well_balanced (so we can construct avl trees using
+this and an ins operation).
+-/
 
 open classical
 open avlnode
@@ -9,6 +58,9 @@ universe u
 namespace avlnode
 variables {α : Type u} [linear_order α]
 
+/--
+Proof that the minimum depth of an avlnode is -1 (in the case it is the empty tree).
+-/
 lemma neg_1_le_dep_n (n : avlnode α) : -1 ≤ depth n :=
 begin
   induction n with l val r hl hr,
@@ -27,6 +79,9 @@ begin
   exact h,
 end
 
+/--
+Proof that the the depth of a tree with just one left subtree is the depth of that subtree add 1.
+-/
 @[simp] lemma dep_l_v_nil_eq_dep_l_add_1 (l : avlnode α) (v : α) 
   : (node l v nil).depth = l.depth + 1 :=
 begin
@@ -42,6 +97,9 @@ begin
   exact h,
 end
 
+/--
+Proof that the the depth of a tree with just one right subtree is the depth of that subtree add 1.
+-/
 @[simp] lemma dep_nil_v_r_eq_dep_r_add_1 (r : avlnode α) (v : α)
   : (node nil v r).depth = r.depth + 1 :=
 begin
@@ -50,6 +108,10 @@ begin
   exact neg_1_le_dep_n r,
 end
 
+/--
+Proof that given a node n, if the depth of the left subtree is less than or equal to the depth of 
+the right subtree, then the depth of n is equal to the depth of the right subtree add 1.
+-/
 lemma dep_l_le_dep_r_then_dep_l_v_r_eq_dep_r_add_1 (l r : avlnode α) (v : α) (h : depth l ≤ depth r)
   : depth (node l v r) = depth r + 1 :=
 begin
@@ -57,6 +119,10 @@ begin
   exact h,
 end
 
+/--
+Proof that given a node n, if the depth of the right subtree is less than or equal to the depth of 
+the left subtree, then the depth of n is equal to the depth of the left subtree add 1.
+-/
 lemma dep_r_le_dep_l_then_dep_l_v_r_eq_dep_l_add_1 (l r : avlnode α) (v : α) (h : depth r ≤ depth l)
   : depth (node l v r) = depth l + 1 :=
 begin
@@ -69,6 +135,9 @@ begin
   exact h_1,
 end
 
+/--
+Proof that given a node n, the depth of the left subtree add 1 is less than the depth of n.
+-/
 lemma dep_l_add_1_le_dep_l_v_r 
   : ∀ (l r : avlnode α) (v : α), l.depth + 1 ≤ (node l v r).depth
 | nil r _ := 
@@ -109,6 +178,9 @@ lemma dep_l_add_1_le_dep_l_v_r
     exact h,
   end
 
+/--
+Proof that given a node n, the depth of the right subtree add 1 is less than the depth of n.
+-/
 lemma dep_r_add_1_le_dep_l_v_r 
   : ∀ (l r : avlnode α) (v : α), r.depth + 1 ≤ (node l v r).depth
 | l nil _              := 
@@ -155,7 +227,7 @@ lemma dep_r_add_1_le_dep_l_v_r
     exact h,
   end
 
-lemma bf_n_eq_2_then_bf_bal_n_le_1 
+private lemma bf_n_eq_2_then_bf_bal_n_le_1 
   : ∀ (n : avlnode α), balance_factor n = 2 → balance_factor (balance n) ≤ 1
 | nil :=
   begin 
@@ -317,7 +389,7 @@ lemma bf_n_eq_2_then_bf_bal_n_le_1
     linarith,
   end
 
-lemma bf_n_eq_neg_2_then_neg_1_le_bf_bal_n
+private lemma bf_n_eq_neg_2_then_neg_1_le_bf_bal_n
   : ∀ (n : avlnode α), balance_factor n = -2 → -1 ≤ balance_factor (balance n)
 | nil :=
   begin 
@@ -419,7 +491,7 @@ lemma bf_n_eq_neg_2_then_neg_1_le_bf_bal_n
     linarith,
   end
 
-lemma children_wb_and_bf_n_le_1_and_neg_2_le_bf_n_then_bf_bal_b_le_1
+private lemma children_wb_and_bf_n_le_1_and_neg_2_le_bf_n_then_bf_bal_b_le_1
   : ∀ (l r : avlnode α) (val : α), well_balanced l ∧ well_balanced r → balance_factor (node l val r) ≤ 1 → -2 ≤ balance_factor (node l val r) → balance_factor (balance (node l val r)) ≤ 1
 | nil nil val :=
   begin 
@@ -549,7 +621,7 @@ lemma children_wb_and_bf_n_le_1_and_neg_2_le_bf_n_then_bf_bal_b_le_1
     linarith,
   end 
 
-lemma children_wb_and_neg_1_le_bf_n_and_bf_n_le_2_then_neg_1_le_bf_bal_n
+private lemma children_wb_and_neg_1_le_bf_n_and_bf_n_le_2_then_neg_1_le_bf_bal_n
   : ∀ (l r : avlnode α) (val : α), well_balanced l ∧ well_balanced r → -1 ≤ balance_factor (node l val r) → balance_factor (node l val r) ≤ 2 → -1 ≤ balance_factor (balance (node l val r))
 | nil nil val :=
   begin 
@@ -653,7 +725,7 @@ lemma children_wb_and_neg_1_le_bf_n_and_bf_n_le_2_then_neg_1_le_bf_bal_n
     linarith,
   end 
 
-lemma bf_n_eq_2_then_dep_n_eq_dep_bal_n_add_1
+private lemma bf_n_eq_2_then_dep_n_eq_dep_bal_n_add_1
   : ∀ (n : avlnode α), balance_factor n = 2 → depth n ≤ depth (balance n) + 1
 | nil :=
   begin
@@ -792,7 +864,7 @@ lemma bf_n_eq_2_then_dep_n_eq_dep_bal_n_add_1
     linarith,
   end
 
-lemma bf_n_eq_neg_2_then_dep_n_eq_dep_bal_n_add_1
+private lemma bf_n_eq_neg_2_then_dep_n_eq_dep_bal_n_add_1
   : ∀ (n : avlnode α), balance_factor n = -2 → depth n ≤ depth (balance n) + 1
 | nil :=
   begin
@@ -912,7 +984,7 @@ lemma bf_n_eq_neg_2_then_dep_n_eq_dep_bal_n_add_1
     linarith,
   end
 
-lemma bf_n_le_1_and_neg_1_le_bf_n_then_n_eq_bal_n
+private lemma bf_n_le_1_and_neg_1_le_bf_n_then_n_eq_bal_n
   : ∀ (n : avlnode α), balance_factor n ≤ 1 ∧ -1 ≤ balance_factor n → n = balance n
 | nil :=
   begin
@@ -951,6 +1023,9 @@ lemma bf_n_le_1_and_neg_1_le_bf_n_then_n_eq_bal_n
     linarith,
   end
 
+/--
+Proof that the balance operation does not increase the depth of a node n.
+-/
 lemma dep_bal_n_le_dep_n
   : ∀ (n : avlnode α), depth (balance n) ≤ depth n
 | nil :=
@@ -1190,7 +1265,7 @@ lemma dep_bal_n_le_dep_n
     exact h,
   end
 
-lemma dep_ins_n_val_le_dep_n_add_1
+private lemma dep_ins_n_val_le_dep_n_add_1
   : ∀ (n : avlnode α) (val : α), depth (ins n val) ≤ depth n + 1
 | nil val2 :=
   begin
@@ -1224,7 +1299,7 @@ lemma dep_ins_n_val_le_dep_n_add_1
     exact h,
   end
 
-lemma children_n_wb_and_bf_n_eq_neg_2_then_bal_n_wb
+private lemma children_n_wb_and_bf_n_eq_neg_2_then_bal_n_wb
   : ∀ (l r : avlnode α) (val : α), well_balanced l ∧ well_balanced r → (node l val r).balance_factor = -2 → well_balanced (node l val r).balance
 | nil nil val :=
   begin
@@ -1455,7 +1530,7 @@ lemma children_n_wb_and_bf_n_eq_neg_2_then_bal_n_wb
     linarith,
   end
 
-lemma children_n_wb_and_bf_n_eq_2_then_bal_n_wb
+private lemma children_n_wb_and_bf_n_eq_2_then_bal_n_wb
   : ∀ (l r : avlnode α) (val : α), well_balanced l ∧ well_balanced r → (node l val r).balance_factor = 2 → well_balanced (node l val r).balance
 | nil nil val :=
   begin
@@ -1596,7 +1671,7 @@ lemma children_n_wb_and_bf_n_eq_2_then_bal_n_wb
     linarith,
   end
 
-lemma wb_n_then_dep_n_le_dep_ins_n_val
+private lemma wb_n_then_dep_n_le_dep_ins_n_val
   : ∀ (n : avlnode α) (val : α), well_balanced n → depth n ≤ depth (ins n val)
 | nil val2 :=
   begin
@@ -1671,6 +1746,9 @@ lemma wb_n_then_dep_n_le_dep_ins_n_val
     exact h_1,
   end
 
+/--
+Proof that the well balanced property is closed under the defined `ins` operation.
+-/
 lemma wb_n_then_wb_ins_n_val
   : ∀ (n : avlnode α) (val : α), well_balanced n → well_balanced (ins n val)
 | nil ins_val :=
@@ -1732,6 +1810,9 @@ lemma wb_n_then_wb_ins_n_val
     exact h_1,
   end
 
+/--
+Proof that the empty tree is well_balanced.
+-/
 lemma wb_nil 
   : well_balanced (nil : avlnode α) := 
 begin 
