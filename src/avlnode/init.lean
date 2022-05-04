@@ -151,13 +151,13 @@ def balance : avlnode α → avlnode α
   | nil                                             := nil
   | (node nil valX nil)                             := (node nil valX nil)
   | (node (node lZ valZ rZ) valX nil)               := if balance_factor (node (node lZ valZ rZ) valX nil) ≤ -2 then 
-                                                        if 0 ≤ (depth lZ) - (depth rZ) then rotate_right (node (node lZ valZ rZ) valX nil)
-                                                        else rotate_right (node (rotate_left (node lZ valZ rZ)) valX nil)
+                                                          if 0 ≤ (depth lZ) - (depth rZ) then rotate_right (node (node lZ valZ rZ) valX nil)
+                                                          else rotate_right (node (rotate_left (node lZ valZ rZ)) valX nil)
                                                        else (node (node lZ valZ rZ) valX nil)
   | (node nil valX (node lZ valZ rZ))               := if 2 ≤ balance_factor (node nil valX (node lZ valZ rZ)) then 
-                                                        if 0 ≤ (depth rZ) - (depth lZ) then rotate_left (node nil valX (node lZ valZ rZ))
-                                                        else rotate_left (node nil valX (rotate_right (node lZ valZ rZ)))
-                                                        else (node nil valX (node lZ valZ rZ))
+                                                          if 0 ≤ (depth rZ) - (depth lZ) then rotate_left (node nil valX (node lZ valZ rZ))
+                                                          else rotate_left (node nil valX (rotate_right (node lZ valZ rZ)))
+                                                       else (node nil valX (node lZ valZ rZ))
   | (node (node lY valY rY) valX (node lZ valZ rZ)) := if 2 ≤ balance_factor (node (node lY valY rY) valX (node lZ valZ rZ)) then
                                                           if 0 ≤ (depth rZ) - (depth lZ) then rotate_left (node (node lY valY rY) valX (node lZ valZ rZ))
                                                           else rotate_left (node (node lY valY rY) valX (rotate_right (node lZ valZ rZ)))
@@ -179,7 +179,7 @@ def ins : avlnode α → α → avlnode α
 Returns Prop which represents whether element is in the tree or not.
 -/
 def mem : avlnode α → α → Prop 
-  | nil mem_val := false
+  | nil mem_val            := false
   | (node l val r) mem_val := if mem_val = val then true
                               else if mem_val < val then mem l mem_val
                               else mem r mem_val
@@ -218,12 +218,19 @@ def post_order : avlnode α → list α
   | (node l val r) := (post_order l) ++ (post_order r) ++ [val]
 
 /--
-Returns Prop which represents if the tree is the empty tree or not.
+Returns Prop which is true if the tree is the empty tree and false if not.
 -/
 def empty : avlnode α → Prop 
   | nil := true
   | _   := false
 
+/--
+Returns Prop which is false if the tree is the empty tree and true if not.
+-/
+def non_empty : avlnode α → Prop
+  | nil := false
+  | _   := true
+  
 /-- 
 Returns a Prop which represents whether the structure observes AVL tree properties (balance factor 
 between -1 and 1 for every node).

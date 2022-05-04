@@ -20,6 +20,11 @@ object with type avlnode α.
 * `avlnode.neg_1_le_dep_n` is a proof that the minimum depth of an avlnode is -1 (in the case it is the 
 empty tree).
 
+* `avlnode.dep_n_eq_neg_1_iff_n_nil` is a proof that the depth of a tree is -1 iff the tree is the 
+empty tree.
+
+* `avlnode.dep_n_eq_0_iff_n_leaf` is a proof that the depth of a tree is 0 iff the tree is a leaf node.
+
 * `avlnode.dep_l_v_nil_eq_dep_l_add_1` is a proof that the the depth of a tree with just one left subtree
 is the depth of that subtree add 1.
 
@@ -77,6 +82,77 @@ begin
   rw int.add_zero at ha,
   exact ha,
   exact h,
+end
+
+/--
+Proof that the depth of a tree is -1 iff the tree is the empty tree.
+-/
+@[simp] lemma dep_n_eq_neg_1_iff_n_nil (n : avlnode α)
+  : depth n = -1 ↔ n = nil :=
+begin
+  rw iff_def,
+  split,
+  intro h,
+  cases n,
+  refl,
+  exfalso,
+  cases classical.em (n_left.depth ≤ n_right.depth),
+  rw [depth, if_pos] at h,
+  have h2 := neg_1_le_dep_n n_right,
+  linarith,
+  exact h_1,
+  rw [depth, if_neg] at h,
+  have h2 := neg_1_le_dep_n n_left,
+  linarith,
+  exact h_1,
+  intro h,
+  rw [h, depth],
+end
+
+/--
+Proof that the depth of a tree is 0 iff the tree is a leaf node.
+-/
+lemma dep_n_eq_0_iff_n_leaf (n : avlnode α)
+  : depth n = 0 ↔ ∃ (val : α), n = (node nil val nil) :=
+begin
+  cases n,
+  rw iff_def,
+  split,
+  intro h,
+  rw depth at h,
+  exfalso,
+  linarith,
+  intro h,
+  cases h with val h,
+  exfalso,
+  trivial,
+
+  rw iff_def,
+  split,
+  intro h,
+  have hl1 := neg_1_le_dep_n n_left,
+  have hr1 := neg_1_le_dep_n n_right,
+  cases classical.em (n_left.depth ≤ n_right.depth),
+  rw [depth, if_pos] at h,
+  have hl2 : n_left.depth = -1 := begin linarith end,
+  have hr2 : n_right.depth = -1 := begin linarith end,
+  rw dep_n_eq_neg_1_iff_n_nil at hl2,
+  rw dep_n_eq_neg_1_iff_n_nil at hr2,
+  rw [hl2, hr2],
+  use n_val,
+  exact h_1,
+  rw [depth, if_neg] at h,
+  have hr2 : n_right.depth = -1 := begin linarith end,
+  have hl2 : n_left.depth = -1 := begin linarith end,
+  rw dep_n_eq_neg_1_iff_n_nil at hl2,
+  rw dep_n_eq_neg_1_iff_n_nil at hr2,
+  rw [hl2, hr2],
+  use n_val,
+  exact h_1,
+  intro h,
+  cases h with val h,
+  rw [h, depth, if_pos, depth],
+  simp,
 end
 
 /--

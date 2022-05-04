@@ -144,10 +144,16 @@ def post_order : avltree α → list α
   | ⟨n, _⟩ := n.post_order
 
 /--
-Returns Prop which represents if the tree is the empty tree or not.
+Returns Prop which is true if the tree is the empty tree and false if not.
 -/
 def empty : avltree α → Prop 
   | ⟨n, _⟩ := n.empty
+
+/--
+Returns Prop which is false if the tree is the empty tree and true if not.
+-/
+def non_empty : avltree α → Prop
+  | ⟨n, _⟩ := n.non_empty
 
 /--
 Returns the balance factor of a given node, defined as the depth of the right subtree subtract the
